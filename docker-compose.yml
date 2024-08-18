@@ -1,0 +1,49 @@
+services:
+  app:
+    build:
+      context: ./fpm
+      dockerfile: Dockerfile
+    image: homework/fpm
+    container_name: app
+    volumes:
+      - ./code:/var/www/html/application.local
+    networks:
+      - homework-network
+
+  webserver:
+    build:
+      context: ./nginx/
+      dockerfile: Dockerfile
+    image: homework/nginx
+    container_name: webserver
+    volumes:
+      - ./code:/var/www/html/application.local
+      - ./nginx/conf/hosts:/etc/nginx/cond.d
+    ports:
+      - "80:80"
+      - "443:443"
+    command: [nginx-debug, '-g', 'daemon off;']
+    networks:
+      - homework-network
+
+  db:
+    build:
+      context: ./mysql/
+      dockerfile: Dockerfile
+    image: homework/mysql
+    container_name: db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./dbdata:/var/lib/mysql
+    networks:
+      - homework-network
+    
+networks:
+  homework-network:
+    driver: bridge
